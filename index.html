@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Chat Assistant 🤖</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 800px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+    }
+    .header {
+      background: #1a2a6c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    #chat-box {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f9f9ff;
+    }
+    .message {
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      max-width: 80%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    .user {
+      background: #e3f2fd;
+      margin-left: auto;
+      border-bottom-right-radius: 5px;
+    }
+    .ai {
+      background: #f1f8e9;
+      margin-right: auto;
+      border-bottom-left-radius: 5px;
+    }
+    .input-area {
+      display: flex;
+      padding: 15px;
+      background: white;
+      border-top: 1px solid #eee;
+    }
+    #user-input {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #ddd;
+      border-radius: 30px;
+      outline: none;
+      font-size: 1rem;
+    }
+    #user-input:focus {
+      border-color: #1a2a6c;
+    }
+    #send-btn {
+      background: #1a2a6c;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 14px 24px;
+      margin-left: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #send-btn:hover {
+      background: #0d1b4a;
+    }
+    .typing {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="header">
+      <h1>💬 AI Chat Assistant</h1>
+    </div>
+    <div id="chat-box">
+      <div class="message ai">Hello! I'm your AI assistant powered by OpenAI. How can I help you today?</div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off" />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message', sender);
+      msgDiv.textContent = text;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showTyping() {
+      const typingDiv = document.createElement('div');
+      typingDiv.classList.add('message', 'ai', 'typing');
+      typingDiv.id = 'typing-indicator';
+      typingDiv.textContent = 'AI is typing...';
+      chatBox.appendChild(typingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typingIndicator = document.getElementById('typing-indicator');
+      if (typingIndicator) typingIndicator.remove();
+    }
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      addMessage(message, 'user');
+      userInput.value = '';
+      showTyping();
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        hideTyping();
+        if (data.error) {
+          addMessage('⚠️ Error: ' + data.error, 'ai');
+        } else {
+          addMessage(data.reply, 'ai');
+        }
+      } catch (err) {
+        hideTyping();
+        addMessage('⚠️ Failed to connect to server.', 'ai');
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
